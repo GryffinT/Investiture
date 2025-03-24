@@ -1,0 +1,107 @@
+-- Initialize variables
+local parentValue = script.Parent
+local priceValue = parentValue.Parent:FindFirstChild("Price")
+local dayHigh = parentValue.Parent:FindFirstChild("DayHigh")
+local dayLow = parentValue.Parent:FindFirstChild("DayLow")
+local vol = script.Parent.Parent:FindFirstChild("Volume") or { Value = 1 }
+
+if not priceValue or not dayHigh or not dayLow then
+	warn("Missing required values: Price, DayHigh, or DayLow.")
+	return
+end
+
+local currentValue = parentValue.Value
+local trend = math.random(1, 4) == 1 and 1 or -1  -- Randomly start by adding (1) or subtracting (-1)
+local changeAmount = 0.1
+local reboundFactor = 3  -- 3x more likely to reverse trend at +/- 5
+local trendFactor = 2  -- 2x more likely to continue current trend
+local reversalStrengthMultiplier = 0.5  -- Increase reversal strength
+local maxNormalValue = 5.0
+local minNormalValue = -5.0
+local trendAdjustmentFactor = 10  -- Adjusts trend continuation probability
+
+-- Function to round a value to the nearest tenth
+local function roundToTenth(value)
+	return math.round(value * 10) / 10
+end
+
+while true do
+	local skip = workspace["Personal Stats"].IsSkipping
+	local norm = script.Parent:FindFirstChild("Trend")
+	if skip.Value == true then
+		norm.Enabled = false
+		-- Fetch latest values
+		local price = priceValue.Value
+		local high = dayHigh.Value
+		local low = dayLow.Value
+
+		-- Debugging output
+		print("Current Price:", price, "Day High:", high, "Day Low:", low, "Trend:", trend == 1 and "Up" or "Down")
+
+		-- Slow trend when near highs/lows
+		if trend == 1 and price >= high - 20 then
+			-- Approaching Day High, slow uptrend
+			changeAmount = changeAmount * 0.5
+			print("Slowing Uptrend: Near Day High")
+		elseif trend == -1 and price <= low + 20 then
+			-- Approaching Day Low, slow downtrend
+			changeAmount = changeAmount * 0.5
+			print("Slowing Downtrend: Near Day Low")
+		else
+			-- Reset change amount when not near limits
+			changeAmount = 0.1
+		end
+
+		-- Rebound mechanics at extreme values
+		if currentValue >= maxNormalValue then
+			if math.random(1, reboundFactor) == 1 then
+				trend = -1
+				print("Rebound Triggered: Reversing to Downtrend at Max!")
+			end
+		elseif currentValue <= minNormalValue then
+			if math.random(1, reboundFactor) == 1 then
+				trend = 1
+				print("Rebound Triggered: Reversing to Uptrend at Min!")
+			end
+		end
+
+		-- Determine trend continuation
+		local trendContinueChance = trendFactor + (math.abs(currentValue) * trendAdjustmentFactor)
+
+		if math.random(1, trendContinueChance) == 1 then
+			-- Continue current trend
+			currentValue = currentValue + (changeAmount * trend)
+			print("Trend Continued:", trend == 1 and "Added" or "Subtracted", changeAmount)
+		else
+			-- Trend reversal logic
+			local reversalEffect = math.abs(currentValue) * reversalStrengthMultiplier
+			if trend == 1 then
+				currentValue = currentValue - reversalEffect
+				trend = -1
+			else
+				currentValue = currentValue + reversalEffect
+				trend = 1
+			end
+			print("Trend Reversed!")
+		end
+
+		-- Keep within min/max range
+		if currentValue > maxNormalValue then
+			currentValue = maxNormalValue
+		elseif currentValue < minNormalValue then
+			currentValue = minNormalValue
+		end
+
+		-- Round to nearest tenth
+		currentValue = roundToTenth(currentValue)
+
+		-- Update value
+		parentValue.Value = currentValue
+
+		wait((math.max(30, (500 - vol.Value) / 30 + 15)) / 100)
+	else
+		norm.Enabled = true
+		wait(1)
+		continue
+	end
+end
