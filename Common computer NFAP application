@@ -1,0 +1,13 @@
+local button = script.Parent
+local NFAP = script.Parent.Parent.Parent:FindFirstChild("NFAP")
+local ACQ = NFAP:FindFirstChild("TextButton")
+local fade = NFAP:FindFirstChild("Fade")
+local timer = fade:FindFirstChild("TextLabel")
+local val = workspace["Personal Stats"]:FindFirstChild("IsInNFAP")
+
+button.MouseButton1Click:Connect(function()
+	local bal = workspace["Personal Stats"]:FindFirstChild("Balance")
+	if bal.Value < 2000 then
+		val.Value = true
+	end
+end)
