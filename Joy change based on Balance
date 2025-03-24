@@ -1,0 +1,33 @@
+local folder = workspace:FindFirstChild("Personal Stats")
+local Fatigue = folder:FindFirstChild("Fatigue")
+local Happiness = folder:FindFirstChild("Happiness")
+local Hunger = folder:FindFirstChild("Hunger")
+local Thirst = folder:FindFirstChild("Thirst")
+local prompt = script.Parent
+local bal = folder:FindFirstChild("Balance")
+
+local previousBalance = bal.Value
+
+while true do
+	wait(5)  -- Wait for 5 seconds
+	local change = bal.Value - previousBalance
+
+	
+	if change ~= 0 then
+		local joy = Happiness.Value
+
+		
+		if change > 0 then
+		
+			joy = joy + change * 0.1  -- You can adjust the multiplier to suit your needs
+		elseif change < 0 then
+		
+			joy = joy - math.abs(change) * 0.1  -- Same here, adjust multiplier if needed
+		end
+
+		joy = math.round(joy)  -- Round the happiness value to the nearest whole number
+		Happiness.Value = joy  -- Update happiness value
+	end
+
+	previousBalance = bal.Value
+end
