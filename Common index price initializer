@@ -1,0 +1,103 @@
+while true do
+	wait(10) 
+
+	local scriptParent = script.Parent 
+	local stocksFolder = scriptParent.Parent.Parent
+
+	-- Check if stocksFolder is found
+	if not stocksFolder then
+		warn("Stocks folder not found!")
+		return
+	end
+
+	local excludedFolders = {TLM = true, ["A&T"] = true} -- Folders to exclude
+	local stockData = {} -- Table to store folder names, volumes, and prices
+
+	-- Loop through each folder inside "Stocks"
+	for _, folder in pairs(stocksFolder:GetChildren()) do
+		if folder:IsA("Folder") and not excludedFolders[folder.Name] then
+			local volumeValue = folder:FindFirstChild("Volume")
+			local priceValue = folder:FindFirstChild("Price")
+
+			-- Ensure both Volume and Price exist and are valid
+			if volumeValue and volumeValue:IsA("IntValue") and priceValue and priceValue:IsA("NumberValue") then
+				table.insert(stockData, {name = folder.Name, volume = volumeValue.Value, price = priceValue.Value})
+			end
+		end
+	end
+
+	wait(1) 
+
+	-- Check if any valid stock data was found
+	if #stockData == 0 then
+		warn("No valid stock data found in any folder!")
+		return
+	end
+
+	-- Sort the stockData table by volume in descending order
+	table.sort(stockData, function(a, b) return a.volume > b.volume end)
+
+	-- Take the top 5 stocks (or fewer if there are less than 5)
+	local topStocks = {}
+	for i = 1, math.min(5, #stockData) do
+		table.insert(topStocks, stockData[i])
+	end
+
+	-- Calculate the weighted average for the index value
+	local totalVolume = 0
+	local weightedSum = 0
+	for _, stock in ipairs(topStocks) do
+		weightedSum = weightedSum + (stock.price * stock.volume)
+		totalVolume = totalVolume + stock.volume
+	end
+
+	local indexValue = 0
+	if totalVolume > 0 then
+		indexValue = weightedSum / totalVolume
+	end
+
+	-- Set the parent value to the calculated index value, rounded to 2 decimal places
+	if scriptParent and scriptParent:IsA("NumberValue") then
+		local oldValue = scriptParent.Value
+		scriptParent.Value = tonumber(string.format("%.2f", indexValue))
+
+		-- Calculate the change in price
+		local change = scriptParent.Value - oldValue
+		local changeFormatted = string.format("%.2f", change)
+		if change > 0 then
+			changeFormatted = "+" .. changeFormatted
+		end
+
+		local changeValue = scriptParent.Parent:FindFirstChild("Change")
+		if changeValue and changeValue:IsA("StringValue") then
+			changeValue.Value = changeFormatted
+		end
+
+		-- Calculate the percentage change
+		local percentChange = 0
+		if oldValue ~= 0 then
+			percentChange = (change / oldValue) * 100
+		end
+		local percentChangeFormatted = string.format("%.2f", percentChange)
+		if percentChange > 0 then
+			percentChangeFormatted = "+" .. percentChangeFormatted
+		end
+
+		local percentChangeValue = scriptParent.Parent:FindFirstChild("%Change")
+		if percentChangeValue and percentChangeValue:IsA("StringValue") then
+			percentChangeValue.Value = percentChangeFormatted .. "%"
+		end
+
+		-- Assign values to Holdings1 through Holdings5
+		for i = 1, 5 do
+			local holdingValue = scriptParent.Parent:FindFirstChild("Holdings" .. i)
+			if holdingValue and holdingValue:IsA("StringValue") then
+				if topStocks[i] then
+					holdingValue.Value = topStocks[i].name
+				else
+					holdingValue.Value = "" 
+				end
+			end
+		end
+	end
+end
