@@ -1,0 +1,106 @@
+local frameParent = script.Parent  
+local stockNameValue = frameParent.Parent:FindFirstChild("StockName")  
+
+if not stockNameValue or not stockNameValue:IsA("StringValue") then
+	warn("StockName value not found or is not a StringValue")
+	return
+end
+
+local stockName = stockNameValue.Value
+local stocksFolder = game.Workspace:FindFirstChild("Stocks")
+if not stocksFolder then
+	warn("Stocks folder not found in Workspace")
+	return
+end
+
+local stockFolder = stocksFolder:FindFirstChild(stockName)
+if not stockFolder then
+	warn("Stock folder '" .. stockName .. "' not found in Stocks")
+	return
+end
+
+local priceValue = stockFolder:FindFirstChild("Price")
+if not priceValue or not priceValue:IsA("NumberValue") then
+	warn("Price value not found or is not a NumberValue in folder " .. stockName)
+	return
+end
+
+local waitTime = 5
+local timeElapsed = 0
+while priceValue.Value == 0 and timeElapsed < waitTime do
+	wait(1)
+	timeElapsed = timeElapsed + 1
+end
+
+if timeElapsed >= waitTime then
+	warn("The price value was not set within 5 seconds.")
+	return
+end
+
+-- Initial setup
+local initialPrice = priceValue.Value
+local frameHeight = frameParent.Size.Y.Offset  -- Graph height
+local frameMadeCount = 0  -- Track how many frames have been created
+local previousPrice = initialPrice  -- Store the previous price
+
+-- Define price range
+local topPrice = initialPrice * 1.5   -- +50%
+local bottomPrice = initialPrice * 0.5 -- -50%
+
+-- Function to calculate Y position based on price
+local function getYPosition(price)
+	local clampedPrice = math.clamp(price, bottomPrice, topPrice)  -- Keep price within range
+	local normalized = (clampedPrice - bottomPrice) / (topPrice - bottomPrice)  -- Normalize between 0 and 1
+	return (1 - normalized) * frameHeight  -- Invert because Y=0 is at the top
+end
+
+-- Function to reset the graph
+local function resetGraph()
+	for _, child in pairs(frameParent:GetChildren()) do
+		if child:IsA("Frame") and child.Name == "Candle" then
+			child:Destroy()
+		end
+	end
+	frameMadeCount = 0
+end
+
+-- Function to create a new candlestick frame
+local function createCandleFrame(openPrice, closePrice)
+	-- Reset if graph reaches the end
+	if frameMadeCount * 6 >= 510 - 5 then
+		resetGraph()
+	end
+
+	local newFrame = Instance.new("Frame")
+	newFrame.Name = "Candle" 
+	newFrame.Size = UDim2.new(0, 5, 0, 0) 
+	newFrame.Parent = frameParent 
+
+	-- Get Y positions for open (bottom) and close (top)
+	local bottomY = getYPosition(openPrice)
+	local topY = getYPosition(closePrice)
+
+	-- Set position & size
+	newFrame.Position = UDim2.new(0, frameMadeCount * 6, 0, math.min(topY, bottomY))
+	newFrame.Size = UDim2.new(0, 5, 0, math.abs(topY - bottomY))
+
+	-- Set color based on movement
+	if closePrice > openPrice then
+		newFrame.BackgroundColor3 = Color3.fromRGB(4, 182, 84)  -- Green for price increase
+	else
+		newFrame.BackgroundColor3 = Color3.fromRGB(182, 6, 6)  -- Red for price decrease
+	end
+
+	-- Increment frame count
+	frameMadeCount = frameMadeCount + 1
+end
+
+-- Create the first candlestick frame using the initial price
+createCandleFrame(initialPrice, initialPrice)
+
+-- Monitor price changes and create new candlesticks
+priceValue.Changed:Connect(function()
+	local newPrice = priceValue.Value
+	createCandleFrame(previousPrice, newPrice)
+	previousPrice = newPrice  -- Update previous price for next frame
+end)
