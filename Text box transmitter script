@@ -1,0 +1,126 @@
+wait(1)
+
+local ModeChanged = game.ReplicatedStorage:WaitForChild("ModeChange")
+local StockChanged = game.ReplicatedStorage:WaitForChild("StockChange")
+
+local mode = game.Lighting:FindFirstChild("mode")
+local stockval = game.Lighting:FindFirstChild("stock")
+local view = game.Lighting:FindFirstChild("view").Value
+
+if not mode then
+	warn("Mode value not found!")
+	return
+end
+
+if not stockval then
+	warn("Stock value not found!")
+	return
+end
+
+local stock = stockval.Value
+local screen = workspace:FindFirstChild("PRINT_SCREEN")
+if not screen then
+	warn("PRINT_SCREEN not found!")
+	return
+end
+
+local frame = screen.SurfaceGui.Frame1.Content:FindFirstChild(view)
+local stockspecs = frame:FindFirstChild("StockSpecs")
+if not stockspecs then
+	warn("StockSpecs not found!")
+	return
+end
+
+-- Function to get the correct TextBox for the current mode and stock
+local function getTextBoxForStockAndMode(stock, mode)
+	local stockframe = stockspecs:FindFirstChild(stock)
+	if not stockframe then
+		warn("Stock frame not found for stock:", stock)
+		return nil
+	end
+	local modeval = mode.Value
+	return stockframe:FindFirstChild("Transact"):FindFirstChild("QuantityEnter"):FindFirstChild(modeval)
+end
+
+-- Initial TextBox setup
+local TextBox = getTextBoxForStockAndMode(stock, mode)
+if not TextBox then
+	warn("TextBox not found with mode:", mode.Value)
+	return
+end
+
+-- Print the initial text in the TextBox
+print("Initial TextBox Text: " .. TextBox.Text)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextInputEvent = ReplicatedStorage:WaitForChild("TextInputEvent")
+
+-- Create a variable to store the previous TextBox event
+local currentChangedConnection
+
+local function onTextChanged()
+	local text = TextBox.Text
+	if text == "" then
+		text = "0"  
+	end
+
+	print("Text Changed! New Text: " .. text) 
+	print("TextBox used: " .. TextBox.Name)
+
+	-- Send the entered text to the server using RemoteEvent
+	TextInputEvent:FireServer(text)
+end
+
+TextBox:GetPropertyChangedSignal("Text"):Connect(onTextChanged)
+
+
+-- Function to update the TextBox and listen for changes
+local function updateTextBox(stock, mode)
+	-- Disconnect the previous event listener if it exists
+	if currentChangedConnection then
+		currentChangedConnection:Disconnect()
+	end
+
+	-- Get the new TextBox based on the stock and mode
+	TextBox = getTextBoxForStockAndMode(stock, mode)
+	if not TextBox then
+		warn("TextBox not found with mode:", mode.Value)
+		return
+	end
+
+	-- Connect the new TextBox's Changed event
+	currentChangedConnection = TextBox.Changed:Connect(onTextChanged)
+
+	-- Print the updated text in the TextBox
+	print("Updated TextBox Text: " .. TextBox.Text)
+end
+
+-- Listen for mode change event from the server
+ModeChanged.OnClientEvent:Connect(function(newMode)
+	-- Update the mode value based on the new mode sent from the server
+	print("Mode changed to:", newMode)
+	mode.Value = newMode
+
+	-- Update the TextBox reference to match the new mode and re-connect the listener
+	updateTextBox(stock, mode)
+end)
+
+-- Listen for stock change event from the server
+StockChanged.OnClientEvent:Connect(function(newStock)
+	-- Update the stock value based on the new stock sent from the server
+	print("Stock changed to:", newStock)
+	stock = newStock
+
+	-- Re-fetch the stock frame and update the stock value in the UI
+	local stockframe = stockspecs:FindFirstChild(stock)
+	if stockframe then
+		-- Update the stock UI elements
+		updateTextBox(stock, mode)
+	else
+		warn("New stock frame not found for stock:", stock)
+	end
+end)
+
+-- Initial mode setup and TextBox update
+updateTextBox(stock, mode)
+
