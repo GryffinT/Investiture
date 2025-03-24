@@ -1,0 +1,77 @@
+local on = workspace:FindFirstChild("LightOn")
+local off = workspace:FindFirstChild("LightOff")
+local prompt = script.Parent
+local sound = script.Parent.Parent:FindFirstChild("Switch")
+
+-- Get all the RoomLights in workspace
+local roomLights = {}
+for _, room in pairs(workspace:GetChildren()) do
+	if room:IsA("Model") and room:FindFirstChild("Bulb") then
+		table.insert(roomLights, room)
+	end
+end
+
+local spotlights = {}
+
+-- Loop through all RoomLights and collect the SpotLights
+print("Debug: Starting spotlight toggling system")
+for _, room in pairs(roomLights) do
+	local bulb = room:FindFirstChild("Bulb")
+	if bulb then
+		local spotlight = bulb:FindFirstChild("SpotLight")
+		if spotlight then
+			table.insert(spotlights, spotlight)
+			print("Debug: Found spotlight in " .. room.Name)
+		else
+			print("Debug: No spotlight found in " .. room.Name)
+		end
+	end
+end
+
+local onColor = Color3.fromRGB(248, 217, 109)  -- Yellowish color
+local offColor = Color3.fromRGB(0, 0, 0)       -- Black color
+
+-- Toggle the spotlights and switch the LightOn/LightOff visibility
+prompt.Triggered:Connect(function()
+	print("Debug: Prompt triggered")
+
+	if on.Transparency == 1 then
+		print("Debug: Turning on lights")
+		off.Transparency = 1
+		on.Transparency = 0
+
+		-- Turn on all spotlights and set the bulbs to the "on" color
+		for _, spotlight in pairs(spotlights) do
+			spotlight.Enabled = true
+			print("Debug: Spotlight " .. spotlight.Parent.Name .. " turned on")
+
+			local bulb = spotlight.Parent
+			if bulb then
+				bulb.Color = onColor  -- Set the bulb color to yellowish
+				print("Debug: Bulb color set to yellow")
+			end
+		end
+
+		sound:Play()
+		print("Debug: Sound played")
+	else
+		print("Debug: Turning off lights")
+		on.Transparency = 1
+		off.Transparency = 0
+
+		-- Turn off all spotlights and set the bulbs to the "off" color (black)
+		for _, spotlight in pairs(spotlights) do
+			spotlight.Enabled = false
+			print("Debug: Spotlight " .. spotlight.Parent.Name .. " turned off")
+
+			local bulb = spotlight.Parent
+			if bulb then
+				bulb.Color = offColor  -- Set the bulb color to black
+				print("Debug: Bulb color set to black")
+			end
+		end
+
+		sound:Play()
+		print("Debug: Sound played")
+	end
+end)
