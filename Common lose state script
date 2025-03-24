@@ -1,0 +1,25 @@
+local val = script.Parent
+local event = game.ReplicatedStorage:WaitForChild("Game Over")
+local Players = game:GetService("Players")
+
+while true do
+	wait(60)
+	val.Value = val.Value - 1
+	if val.Value <= 0 then
+		-- Find the only player in the server
+		local player = Players:GetPlayers()[1]
+		if player then
+			local character = player.Character
+			if character then
+				local playerCamera = player.CameraMaxZoomDistance
+				player.CameraMaxZoomDistance = playerCamera + 0.5 -- Increase max zoom distance
+			end
+		end
+
+		-- Fire the event to all clients
+		event:FireAllClients("Remember to sleep.")
+
+		-- Destroy the script
+		script:Destroy()
+	end
+end
