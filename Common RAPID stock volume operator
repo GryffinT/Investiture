@@ -1,0 +1,71 @@
+local val = script.Parent
+local trend = script.Parent.Parent:FindFirstChild("Trend") -- Access sibling called "Trend"
+local maxChange = 50 -- Maximum volume change of 50 units
+
+-- Set an initial value for val
+val.Value = math.random(10, 1000)
+
+-- Function to get a weighted random number based on the value of val
+local function getWeightedRandom()
+	local rand = math.random(1, 100)
+
+	if rand <= 25 then
+		-- 25% chance for a number between 10 and 200
+		return math.random(10, 200)
+	elseif rand <= 40 then
+		-- 15% chance for a number between 200 and 400
+		return math.random(200, 400)
+	elseif rand <= 55 then
+		-- 15% chance for a number between 400 and 600
+		return math.random(400, 600)
+	elseif rand <= 70 then
+		-- 15% chance for a number between 600 and 800
+		return math.random(600, 800)
+	elseif rand <= 85 then
+		-- 15% chance for a number between 800 and 1000
+		return math.random(800, 1000)
+	else
+		-- 15% chance for a number between 1000 and 1500
+		return math.random(1000, 1500)
+	end
+end
+
+-- Function to adjust the volume based on the trend
+local function adjustVolumeBasedOnTrend()
+	-- Check the direction of the trend
+	local trendValue = trend and trend.Value or 0
+	local directionMultiplier = trendValue > 0 and 1 or -1
+
+	-- Decide how much to adjust based on the trend value
+	if trendValue > 0 then
+		adjustmentFactor = trendValue + 1
+	else
+		adjustmentFactor = trendValue
+	end
+	adjustmentFactor = math.min(adjustmentFactor, 1) -- Limit the adjustment to not go over the trend range
+
+	-- Calculate the potential volume change
+	local volumeChange = val.Value * math.abs(adjustmentFactor) * directionMultiplier
+
+	-- Ensure that the volume change does not exceed ±50
+	volumeChange = math.clamp(volumeChange, -maxChange, maxChange)
+
+	-- Apply the volume change
+	val.Value = val.Value + volumeChange
+end
+
+while true do
+	local skip = workspace["Personal Stats"].IsSkipping
+	local norm = script.Parent:FindFirstChild("VolumeOperator")
+	if skip.Value == true then
+		norm.Enabled = false
+		adjustVolumeBasedOnTrend()
+
+		wait((math.random(10, 60)) / 100)
+	else
+		norm.Enabled = true
+		wait(1)
+		continue
+	end
+
+end
