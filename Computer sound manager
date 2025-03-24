@@ -1,0 +1,42 @@
+local event = game.ReplicatedStorage:WaitForChild("Shutoff")
+
+event.OnServerEvent:Connect(function(player) -- Include 'player' as the first parameter
+	local screen = workspace:FindFirstChild("PRINT_SCREEN")
+	local handler = workspace.CameraPart.ProximityPrompt:FindFirstChild("loader")
+	if screen then
+ddw		handler.Enabled = false
+		local Msfx = screen:FindFirstChild("MainSound")
+		local Ssfx = screen:FindFirstChild("Startup")
+		local ShutDown = screen:FindFirstChild("Shutdown")
+		local Bsfx = screen:FindFirstChild("Boot")
+		local initial = screen:FindFirstChild("Initial")
+		local loader = screen:FindFirstChild("Loader")
+		local Main = screen:FindFirstChild("SurfaceGui")
+		local password = initial.TextLabel.Text
+		local frame1 = loader.Background.Frame:FindFirstChild("Frame1")
+		local frame2 = loader.Background.Frame:FindFirstChild("Frame2")
+		local frame3 = loader.Background.Frame:FindFirstChild("Frame3")
+		local frame4 = loader.Background.Frame:FindFirstChild("Frame4")
+		local frame5 = loader.Background.Frame:FindFirstChild("Frame5")
+		local frame6 = loader.Background.Frame:FindFirstChild("Frame6")
+		local frame7 = loader.Background.Frame:FindFirstChild("Frame7")
+		local frame8 = loader.Background.Frame:FindFirstChild("Frame8")
+		if Msfx then Msfx:Stop() end
+		if Bsfx then Bsfx:Stop() end
+		if Ssfx then Ssfx:Stop() end
+		if initial then initial.Enabled = false end
+		if loader then loader.Enabled = false end
+		if Main then Main.Enabled = false end
+		password = "..."
+		frame1.Visible = false
+		frame2.Visible = false
+		frame3.Visible = false
+		frame4.Visible = false
+		frame5.Visible = false
+		frame6.Visible = false
+		frame7.Visible = false
+		frame8.Visible = false
+		if ShutDown then ShutDown:Play() end
+		handler.Enabled = true
+	end
+end)
