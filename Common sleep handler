@@ -1,0 +1,106 @@
+local prompt = script.Parent
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local event = game.ReplicatedStorage:WaitForChild("WindowToggle")
+local billDeliveryEvent = game.ReplicatedStorage:WaitForChild("BillDelivery")
+
+local function getOrCreateFadeGui(player)
+	local playerGui = player:FindFirstChild("PlayerGui")
+	if not playerGui then 
+		print("DEBUG: PlayerGui not found for", player.Name) 
+		return nil 
+	end
+
+	local screenGui = playerGui:FindFirstChild("FadeGui")
+	if not screenGui then
+		screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "FadeGui"
+		screenGui.ResetOnSpawn = false
+		screenGui.IgnoreGuiInset = true
+		screenGui.Parent = playerGui
+	end
+
+	local fadeFrame = screenGui:FindFirstChild("FadeFrame")
+	if not fadeFrame then
+		fadeFrame = Instance.new("Frame")
+		fadeFrame.Name = "FadeFrame"
+		fadeFrame.Size = UDim2.new(1, 0, 1, 0)
+		fadeFrame.Position = UDim2.new(0, 0, 0, 0)
+		fadeFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+		fadeFrame.BackgroundTransparency = 1
+		fadeFrame.ZIndex = 10
+		fadeFrame.Parent = screenGui
+	end
+
+	return fadeFrame
+end
+
+local function playDoorSound()
+	local doorSound = Workspace:FindFirstChild("Sleeping")
+	local clock = workspace:FindFirstChild("ClockSFX")
+	if doorSound and doorSound:IsA("Sound") then
+		doorSound:Play()
+		clock:Play()
+	end
+end
+
+local function setPlayerSpeed(player, speed)
+	local character = player.Character
+	if character then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = speed
+		end
+	end
+end
+
+local function fadeScreen(player, fadeInTime, waitTime, fadeOutTime)
+	local fadeFrame = getOrCreateFadeGui(player)
+	if not fadeFrame then return end
+	local alarm = script.Parent.Parent:FindFirstChild("Alarm")
+
+	local fadeInTween = TweenService:Create(fadeFrame, TweenInfo.new(fadeInTime), {BackgroundTransparency = 0})
+	local fadeOutTween = TweenService:Create(fadeFrame, TweenInfo.new(fadeOutTime), {BackgroundTransparency = 1})
+
+	playDoorSound()
+	setPlayerSpeed(player, 0)
+
+	fadeInTween:Play()
+	fadeInTween.Completed:Wait()
+
+	wait(waitTime - 3)
+
+	alarm:Play()
+	wait(1)
+	alarm:Play()
+	wait(1)
+	alarm:Play()
+	wait(1)
+
+	playDoorSound()
+	fadeOutTween:Play()
+	fadeOutTween.Completed:Wait()
+
+	setPlayerSpeed(player, 7)
+end
+
+prompt.Triggered:Connect(function(player)
+	local skip = workspace["Personal Stats"].IsSkipping
+	local clock = workspace:FindFirstChild("ClockSFX")
+	skip.Value = true
+	fadeScreen(player, 2, 20, 2)
+	clock:Stop()
+
+	local oldTime = Lighting.ClockTime
+	local newTime = (oldTime + 8) % 24
+	Lighting.ClockTime = newTime
+	event:FireAllClients()
+	skip.Value = false
+
+	if newTime > 20.5 or newTime <= 2 then
+		print("DEBUG: Firing BillDelivery event")
+		billDeliveryEvent:FireAllClients()
+	end
+end)
