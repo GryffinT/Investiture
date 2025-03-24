@@ -1,0 +1,60 @@
+local text = script.Parent
+local BalVal = workspace["Personal Stats"]:FindFirstChild("Balance")
+local event = game.ReplicatedStorage:FindFirstChild("TextInputEvent")
+local stockObj = script.Parent.Parent.Parent.Parent:FindFirstChild("StockName")
+
+local stock = stockObj and stockObj.Value
+
+local function FormatTxT(txt)
+	if txt >= 1000000 then
+		return string.format("$%.2fM", txt / 1000000)
+	elseif txt >= 1000 then
+		return string.format("$%.2fK", txt / 1000)
+	else
+		return string.format("$%.2f", txt)
+	end
+end
+
+local function UpdateBalanceDisplay(amount)
+	text.Text = FormatTxT(amount)
+end
+
+if BalVal then
+	UpdateBalanceDisplay(BalVal.Value)
+end
+
+event.OnServerEvent:Connect(function(player)
+	if not BalVal then return end
+
+	local SharesObj = script.Parent.Parent:FindFirstChild("Shares")
+	local MoneyObj = script.Parent.Parent:FindFirstChild("Money")
+	local ModeFrame = script.Parent.Parent.Parent:FindFirstChild("QuantityEnter")
+
+	if not SharesObj or not MoneyObj or not ModeFrame then return end
+
+	local Shares = SharesObj.Value
+	local Money = MoneyObj.Value
+	local MoneyMode = ModeFrame:FindFirstChild("Money") and ModeFrame.Money.Visible
+	local ShareMode = ModeFrame:FindFirstChild("Shares") and ModeFrame.Shares.Visible
+
+	local Stocks = workspace.Stocks:FindFirstChild(stock)
+	if not Stocks then return end
+
+	local Price = Stocks:FindFirstChild("Price") and Stocks.Price.Value
+	local Bal = BalVal.Value
+
+	local newBalance
+	if MoneyMode then
+		newBalance = Bal - Money
+	elseif ShareMode and Shares ~= 0 then
+		newBalance = Bal - (Shares * Price)
+	else
+		newBalance = Bal
+	end
+
+	if Money < 0 or Shares < 0 then
+		newBalance = Bal + math.abs(Money + (Shares * Price))
+	end
+
+	UpdateBalanceDisplay(newBalance)
+end)
