@@ -1,0 +1,46 @@
+local button = script.Parent
+local BuyFrame = script.Parent.Parent:FindFirstChild("BuyFrame")
+local QuantityFrame = BuyFrame.Parent:FindFirstChild("QuantityEnter")
+local portfolio = workspace["Personal Stats"]:FindFirstChild("Portfolio")
+local StockName = BuyFrame.Parent.Parent:FindFirstChild("StockName").Value
+local Stock = workspace.Stocks:FindFirstChild(StockName)
+
+button.MouseButton1Click:Connect(function()
+	local Balance = workspace["Personal Stats"]:FindFirstChild("Balance")
+	local price = Stock and Stock:FindFirstChild("Price") and Stock:FindFirstChild("Price").Value or 0
+	local Cash = BuyFrame:FindFirstChild("Money").Value
+	local Shares = BuyFrame:FindFirstChild("Shares").Value
+	local MoneyMode = QuantityFrame:FindFirstChild("Money").Visible
+	local ShareMode = QuantityFrame:FindFirstChild("Shares").Visible
+	local Quantity = BuyFrame:FindFirstChild("Quantity") and BuyFrame:FindFirstChild("Quantity").Value or 0
+	local sold = portfolio:FindFirstChild(StockName)
+
+	-- Determine money spent
+	local Money = MoneyMode and Cash or (Shares * price)
+
+	if Money > 0 and Balance.Value >= Money then
+		if sold then
+			sold.Value = sold.Value + Quantity
+		else
+			local insert = Instance.new("NumberValue")
+			insert.Name = StockName
+			insert.Value = Quantity
+			insert.Parent = portfolio
+		end
+		Balance.Value = Balance.Value - Money
+		print("Purchase of " .. Quantity .. " shares of " .. StockName .. " complete!")
+	elseif Quantity < 0 and sold then
+		local have = sold.Value
+		local sellAmount = math.min(math.abs(Quantity), have)
+		Balance.Value = Balance.Value + (sellAmount * price)
+		sold.Value = sold.Value - sellAmount
+
+		if sold.Value <= 0 then
+			sold:Destroy()
+		end
+
+		print("Sale of " .. sellAmount .. " shares of " .. StockName .. " complete!")
+	else
+		print("Exchange Error!")
+	end
+end)
