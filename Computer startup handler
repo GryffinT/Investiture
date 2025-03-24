@@ -1,0 +1,74 @@
+local prompt = script.Parent
+local entry = workspace.PRINT_SCREEN:FindFirstChild("Initial")
+local goal = workspace.PRINT_SCREEN:FindFirstChild("SurfaceGui")
+local text = entry and entry:FindFirstChild("TextLabel")
+local loader = workspace.PRINT_SCREEN:FindFirstChild("Loader")
+local background = loader and loader:FindFirstChild("Background")
+local frame = background and background:FindFirstChild("Frame")
+local beam = workspace.Beam:FindFirstChild("Beam")
+local Msfx = workspace.PRINT_SCREEN:FindFirstChild("MainSound")
+local Bsfx = workspace.PRINT_SCREEN:FindFirstChild("Boot")
+local Ssfx = workspace.PRINT_SCREEN:FindFirstChild("Startup")
+local Ksfx = workspace.PRINT_SCREEN:FindFirstChild("Key")
+local event = game.ReplicatedStorage:WaitForChild("CompOn")
+
+prompt.Triggered:Connect(function()
+    local trig = script.Parent:FindFirstChild("Toggled")
+    if not (Bsfx and loader and frame and text and Msfx and Ksfx and Ssfx and entry and goal) then
+        return
+    end
+
+    if trig.Value == true then
+        Bsfx:Play()
+        wait(6)
+        Msfx:Play()
+        Bsfx:Stop()
+        wait(1)
+        Ssfx:Play()
+        goal.Enabled = true
+        event:FireAllClients()
+        entry.Enabled = false
+        text.Text = "..."
+        return
+    end
+    
+    Bsfx:Play()
+    wait(6)
+    beam.Enabled = true
+    loader.Enabled = true
+    wait(math.random(1,2))
+
+    for i = 1, 8 do
+        local currentFrame = frame:FindFirstChild("Frame" .. i)
+        if currentFrame then
+            currentFrame.Visible = true
+            wait(math.random(1,5))
+        end
+    end
+
+    wait(math.random(1,8))
+    loader.Enabled = false
+    Bsfx:Stop()
+    Msfx:Play()
+    entry.Enabled = true
+
+    for i = 1, 8 do
+        local currentFrame = frame:FindFirstChild("Frame" .. i)
+        if currentFrame then
+            currentFrame.Visible = false
+        end
+    end
+
+    for i = 1, 6 do
+        Ksfx:Play()
+        text.Text = string.rep("*", i)
+        wait(1)
+    end
+
+    wait(3)
+    Ssfx:Play()
+    goal.Enabled = true
+    entry.Enabled = false
+    text.Text = "..."
+    trig.Value = true
+end)
