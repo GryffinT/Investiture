@@ -1,0 +1,23 @@
+local app = workspace.PRINT_SCREEN:FindFirstChild("SurfaceGui")
+local open = app.Mainframe:FindFirstChild("App2")
+local event = game.ReplicatedStorage:WaitForChild("Win")
+local Players = game:GetService("Players")
+
+while true do
+	wait(10)
+	local val = script.Parent.Value
+	if val >= 5000 then
+		local player = Players:GetPlayers()[1]
+		if player then
+			local character = player.Character
+			if character then
+				local playerCamera = player.CameraMaxZoomDistance
+				player.CameraMaxZoomDistance = playerCamera + 0.5 -- Increase max zoom distance
+			end
+		end
+
+		event:FireAllClients()
+
+		script:Destroy()
+	end
+end
