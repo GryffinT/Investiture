@@ -1,0 +1,94 @@
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+
+local balanceStore = DataStoreService:GetDataStore("PlayerBalanceStore")
+local leaderboardStore = DataStoreService:GetOrderedDataStore("GlobalLeaderboard")
+
+local leaderboardGui = game.Workspace:FindFirstChild("Leaderboard")
+if not leaderboardGui then
+	warn("Leaderboard object not found in Workspace!")
+	return
+end
+local surfaceGui = leaderboardGui:FindFirstChild("SurfaceGui")
+if not surfaceGui then
+	warn("SurfaceGui not found in Leaderboard!")
+	return
+end
+
+-- Function to load player balance
+local function onPlayerAdded(player)
+	local statsFolder = game.Workspace:FindFirstChild("Personal Stats")
+	if not statsFolder then
+		warn("Personal Stats folder not found in Workspace!")
+		return
+	end
+
+	-- Find or create Balance NumberValue
+	local balance = statsFolder:FindFirstChild("Balance")
+	if not balance then
+		warn("Balance not found in Personal Stats!")
+		return
+	end
+
+	-- Load saved balance
+	local success, data = pcall(function()
+		return balanceStore:GetAsync(player.UserId)
+	end)
+
+	if success and data then
+		balance.Value = data
+	else
+		balance.Value = 1000 -- Default balance
+	end
+end
+
+-- Function to save player balance
+local function onPlayerRemoving(player)
+	local statsFolder = game.Workspace:FindFirstChild("Personal Stats")
+	if not statsFolder then return end
+
+	local balance = statsFolder:FindFirstChild("Balance")
+	if balance then
+		local success, err = pcall(function()
+			balanceStore:SetAsync(player.UserId, balance.Value)
+			leaderboardStore:SetAsync(player.UserId, balance.Value)
+		end)
+
+		if not success then
+			warn("Failed to save balance: " .. err)
+		end
+	end
+end
+
+-- Function to update global leaderboard
+local function updateLeaderboard()
+	local success, data = pcall(function()
+		return leaderboardStore:GetSortedAsync(false, 5):GetCurrentPage()
+	end)
+
+	if success then
+		for i, entry in ipairs(data) do
+			local playerName = game.Players:GetNameFromUserIdAsync(entry.key)
+			local balance = entry.value
+			local spot = surfaceGui:FindFirstChild("Spot" .. i)
+
+			if spot and spot:IsA("TextLabel") then
+				spot.Text = string.format("%d. %s: %d", i, playerName, balance)
+			end
+		end
+	else
+		warn("Failed to update leaderboard!")
+	end
+end
+
+-- Update leaderboard every 60 seconds
+task.spawn(function()
+	while true do
+		updateLeaderboard()
+		task.wait(10)
+	end
+end)
+
+-- Connect events
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
