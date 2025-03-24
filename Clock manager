@@ -1,0 +1,18 @@
+local timeLabel = script.Parent:WaitForChild("TimeLabel")  
+
+game:GetService("RunService").Heartbeat:Connect(function()
+	-- Get the current clock time
+	local clockTime = game.Lighting.ClockTime
+
+	local hours = math.floor(clockTime)
+	local minutes = math.floor((clockTime - hours) * 60)
+
+	local period = hours >= 12 and "PM" or "AM"
+	local hour12 = hours % 12
+	if hour12 == 0 then
+		hour12 = 12
+	end
+
+	-- Display the time as Hour:Minute AM/PM
+	timeLabel.Text = string.format("%02d:%02d %s", hour12, minutes, period)
+end)
