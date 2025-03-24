@@ -1,0 +1,23 @@
+local timerLabel = script.Parent
+local fade = script.Parent.Parent
+local NFAP = script.Parent.Parent.Parent
+local button = NFAP:FindFirstChild("TextButton")
+
+while true do
+	local val = workspace["Personal Stats"]:FindFirstChild("IsInCD")
+
+	if val and val.Value == true then
+		fade.Visible = true 
+
+		while tonumber(timerLabel.Text:match("%d+")) and tonumber(timerLabel.Text:match("%d+")) > 0 do
+			local timeLeft = tonumber(timerLabel.Text:match("%d+")) 
+			timerLabel.Text = tostring(timeLeft - 1) .. "s"
+			wait(1)
+		end
+
+		fade.Visible = false
+		button.Interactable = true
+		
+	end
+	wait(1)
+end
