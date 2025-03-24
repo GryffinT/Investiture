@@ -1,0 +1,9 @@
+local val = script.Parent
+local event = game.ReplicatedStorage:WaitForChild("Needs")
+
+while true do
+	wait(5)
+	if val.Value <= 50 then
+		event:FireAllClients("Dont forget to maintain yourself.")
+	end
+end
