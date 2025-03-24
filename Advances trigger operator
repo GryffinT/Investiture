@@ -1,0 +1,80 @@
+local TweenService = game:GetService("TweenService")
+local part = script.Parent  
+local billboardGui = part:FindFirstChild("BillboardGui")
+local proximityPrompt = part:FindFirstChild("ProximityPrompt")
+
+local function fadeInChildren(frame, duration)
+	for _, object in pairs(frame:GetDescendants()) do
+		if object:IsA("Frame") then
+			object.BackgroundTransparency = 1
+			local tween = TweenService:Create(object, TweenInfo.new(duration), {BackgroundTransparency = 0})
+			tween:Play()
+		elseif object:IsA("TextLabel") or object:IsA("TextButton") then
+			object.TextTransparency = 1
+			object.BackgroundTransparency = 1
+			local tween = TweenService:Create(object, TweenInfo.new(duration), {TextTransparency = 0, BackgroundTransparency = .25})
+			tween:Play()
+		elseif object:IsA("ImageLabel") or object:IsA("ImageButton") then
+			object.ImageTransparency = 1
+			local tween = TweenService:Create(object, TweenInfo.new(duration), {ImageTransparency = 0})
+			tween:Play()
+		end
+	end
+end
+
+local function fadeOutChildren(frame, duration)
+	for _, object in pairs(frame:GetDescendants()) do
+		if object:IsA("Frame") then
+			local tween = TweenService:Create(object, TweenInfo.new(duration), {BackgroundTransparency = 1})
+			tween:Play()
+		elseif object:IsA("TextLabel") or object:IsA("TextButton") then
+			local tween = TweenService:Create(object, TweenInfo.new(duration), {TextTransparency = 1, BackgroundTransparency = 1})
+			tween:Play()
+		elseif object:IsA("ImageLabel") or object:IsA("ImageButton") then
+			local tween = TweenService:Create(object, TweenInfo.new(duration), {ImageTransparency = 1})
+			tween:Play()
+		end
+	end
+end
+
+local function playerInRange()
+	local players = game.Players:GetPlayers()
+	for _, player in pairs(players) do
+		if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local distance = (player.Character.HumanoidRootPart.Position - part.Position).Magnitude
+			if distance <= proximityPrompt.MaxActivationDistance then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+if proximityPrompt and billboardGui then
+	local mainFrame = billboardGui:FindFirstChild("MainFrame")
+	if mainFrame then
+		billboardGui.Enabled = false  
+
+		local isVisible = false
+
+		-- Continuously check for players within range
+		while true do
+			local isInRange = playerInRange()
+
+			if isInRange and not isVisible then
+				billboardGui.Enabled = true
+				fadeInChildren(mainFrame, .5)  -- Fade in everything inside MainFrame
+				isVisible = true
+			elseif not isInRange and isVisible then
+				fadeOutChildren(mainFrame, .5)  -- Fade out everything inside MainFrame
+				isVisible = false
+			end
+
+			wait(0.25) 
+		end
+	else
+		warn("MainFrame not found in BillboardGui")
+	end
+else
+	warn("ProximityPrompt or BillboardGui not found in", part)
+end
