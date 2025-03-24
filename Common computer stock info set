@@ -1,0 +1,80 @@
+local TweenService = game:GetService("TweenService")
+
+local frame = script.Parent 
+local stockNameValue = frame:FindFirstChild("StockName")
+
+if not stockNameValue then
+	warn("StockName value missing in frame!")
+	return
+end
+
+local stockName = stockNameValue.Value
+local stock = workspace.Stocks:FindFirstChild(stockName)
+
+if not stock then
+	warn("Stock " .. stockName .. " not found!")
+	return
+end
+
+local trackedValues = {"%Change", "Change", "DayHigh", "DayLow", "Price", "Volume"}
+local uiElements = {}
+
+for _, valueName in ipairs(trackedValues) do
+	local textLabel = frame:FindFirstChild(valueName)
+	local stockValue = stock:FindFirstChild(valueName)
+	if textLabel and stockValue then
+		uiElements[valueName] = {textLabel = textLabel, stockValue = stockValue}
+	else
+		warn("Missing UI element or stock value: " .. valueName)
+	end
+end
+
+local redPrice = frame:FindFirstChild("RedPrice")
+local greenPrice = frame:FindFirstChild("GreenPrice")
+if redPrice then redPrice.BackgroundTransparency = 1 end
+if greenPrice then greenPrice.BackgroundTransparency = 1 end
+
+local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local function fadeEffect(guiObject)
+	if guiObject.BackgroundTransparency == 0.5 then return end -- Prevent multiple fade-ins
+	local fadeIn = TweenService:Create(guiObject, tweenInfo, {BackgroundTransparency = 0.5})
+	fadeIn:Play()
+	fadeIn.Completed:Wait()
+	local fadeOut = TweenService:Create(guiObject, tweenInfo, {BackgroundTransparency = 1})
+	fadeOut:Play()
+end
+
+local prevPrice = stock:FindFirstChild("Price") and stock.Price.Value or 0
+
+local function formatVolume(volume)
+	if volume >= 1000000 then
+		return string.format("%.2fT", volume / 1000000)  -- Convert to Trillions (T)
+	elseif volume >= 1000 then
+		return string.format("%.2fB", volume / 1000)  -- Convert to Billions (B)
+	else
+		return string.format("%.0fM", volume)  -- If volume is in millions, display as M
+	end
+end
+
+while true do
+	for valueName, elements in pairs(uiElements) do
+		if valueName == "Volume" then
+			-- Use the formatVolume function to format the volume value
+			elements.textLabel.Text = formatVolume(elements.stockValue.Value)
+		else
+			elements.textLabel.Text = tostring(elements.stockValue.Value)
+		end
+	end
+
+	local currentPrice = stock:FindFirstChild("Price") and stock.Price.Value or prevPrice
+	if redPrice and greenPrice then
+		if currentPrice > prevPrice then
+			fadeEffect(greenPrice)
+		elseif currentPrice < prevPrice then
+			fadeEffect(redPrice)
+		end
+	end
+
+	prevPrice = currentPrice
+	wait(1)
+end
