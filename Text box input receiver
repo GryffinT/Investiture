@@ -1,0 +1,62 @@
+-- Server-side script in ServerScriptService or Workspace
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextInputEvent = ReplicatedStorage:WaitForChild("TextInputEvent")
+
+TextInputEvent.OnServerEvent:Connect(function(player, text)
+	-- Get the mode value from the TextBoxTransmitter in StarterGui
+	local modeval = game.Lighting:FindFirstChild("mode")
+	local stock = game.Lighting:FindFirstChild("stock")
+	local view = game.Lighting:FindFirstChild("view").Value
+
+	if modeval and modeval:IsA("StringValue") then
+		modeval = modeval.Value -- Retrieve the mode value
+		stockval = stock.Value
+		print("mode is :" .. modeval)
+	else
+		warn("modeval not found or not a StringValue!")
+		return
+	end
+
+	-- Check if the received text is a valid number
+	local number = tonumber(text)
+
+	if number then
+		-- Round the number to the nearest tenth
+		local roundedNumber = math.round(number * 10) / 10
+
+		-- Find the BuyFrame and the NumberValue named after modeval
+		local screen = workspace:FindFirstChild("PRINT_SCREEN")
+		if screen then
+			local frametobuy = screen.SurfaceGui.Frame1.Content:FindFirstChild(view)
+			local stockspecs = frametobuy:FindFirstChild("StockSpecs")
+			if stockspecs then
+				-- Use modeval to find the correct stock frame
+				local stockframe = stockspecs:FindFirstChild(stockval)  -- Use modeval to find stock frame
+				if stockframe then
+					local buyFrame = stockframe.Transact:FindFirstChild("BuyFrame")
+					if buyFrame then
+						-- Find the NumberValue named after modeval
+						local numberValue = buyFrame:FindFirstChild(modeval)
+						if numberValue and numberValue:IsA("NumberValue") then
+							-- Set the rounded number to the corresponding NumberValue
+							numberValue.Value = roundedNumber
+							print("Set " .. modeval .. " to: " .. roundedNumber)
+						else
+							warn("NumberValue for modeval not found or not a NumberValue!")
+						end
+					else
+						warn("BuyFrame not found!")
+					end
+				else
+					warn("Stock frame for modeval not found!")
+				end
+			else
+				warn("StockSpecs not found!")
+			end
+		else
+			warn("PRINT_SCREEN not found!")
+		end
+	else
+		warn("Invalid number received: " .. text)
+	end
+end)
