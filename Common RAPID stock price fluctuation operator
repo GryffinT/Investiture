@@ -1,0 +1,88 @@
+local parentValue = script.Parent
+local percentChange = parentValue.Parent:WaitForChild("%Change")
+local actualChange = parentValue.Parent:WaitForChild("Change")
+local trendValue = parentValue.Parent:WaitForChild("Trend")
+local vol = script.Parent.Parent:FindFirstChild("Volume")
+
+while true do
+	local skip = workspace["Personal Stats"].IsSkipping
+	local norm = script.Parent:FindFirstChild("PriceFluctuationOperator")
+	local value = parentValue.Value
+	local originalValue = value
+	if skip.Value == true then
+		norm.Enabled = false
+		if originalValue == 0 or not originalValue then
+			warn("Original value is zero or invalid, skipping calculation.")
+			wait(1)
+			continue
+		end
+
+		local randomChance = math.random(1, 100)
+		local trendAbs = math.abs(trendValue.Value) -- Get the absolute value of the trend
+
+		-- Calculate dynamic percentage range based on trend
+		local baseRange = 0.05 -- Minimum change range (5%)
+		local maxRange = math.min(trendAbs / 5, 0.25) -- Max increase at 25%
+		local percentageRange = baseRange + maxRange -- Final dynamic range
+
+		-- Generate a random percentage change within the calculated range
+		local percentage = math.random(0, percentageRange * 1000) / 1000
+
+		if trendValue.Value > 0 then
+			-- More likely to increase if trend is positive
+			local increaseProbability = 50 + (trendAbs * 2) -- Increase likelihood to go up as trend becomes stronger
+			if randomChance <= increaseProbability then
+				value = value + (value * percentage)
+				actualChange.Value = "+" .. string.format("%.2f", value - originalValue)
+			else
+				-- Small decrease, also dynamic
+				local decreasePercentage = math.random(0, percentageRange * 500) / 1000 -- Half the normal range
+				value = value - (value * decreasePercentage)
+				actualChange.Value = "-" .. string.format("%.2f", originalValue - value)
+			end
+		elseif trendValue.Value < 0 then
+			-- More likely to decrease if trend is negative
+			local decreaseProbability = 50 + (trendAbs * 2) -- Increase likelihood to go down as trend becomes stronger
+			if randomChance <= decreaseProbability then
+				value = value - (value * percentage)
+				actualChange.Value = "-" .. string.format("%.2f", originalValue - value)
+			else
+				-- Small increase, also dynamic
+				local increasePercentage = math.random(0, percentageRange * 500) / 1000
+				value = value + (value * increasePercentage)
+				actualChange.Value = "+" .. string.format("%.2f", value - originalValue)
+			end
+		else
+			-- If no trend, apply a normal fluctuation with base range
+			if randomChance <= 50 then
+				percentage = math.random(0, baseRange * 1000) / 1000
+				value = value + (value * percentage)
+				actualChange.Value = "+" .. string.format("%.2f", value - originalValue)
+			else
+				percentage = math.random(0, baseRange * 1000) / 1000
+				value = value - (value * percentage)
+				actualChange.Value = "-" .. string.format("%.2f", originalValue - value)
+			end
+		end
+
+		-- Update the price
+		parentValue.Value = tonumber(string.format("%.2f", value))
+
+		-- Calculate the percent change
+		local change = value - originalValue
+		if originalValue == 0 then
+			percentChange.Value = "0%"
+		else
+			local percent = (change / originalValue) * 100
+			percentChange.Value = (percent >= 0 and "+" or "") .. string.format("%.2f", percent) .. "%"
+		end
+
+		-- Wait time scales with volume
+		wait((math.max(30, (500 - vol.Value) / 30 + 15)) / 100)
+	else
+		norm.Enabled = true
+		wait(1)
+		continue
+	end
+	wait(1)
+end
