@@ -1,0 +1,16 @@
+local button = script.Parent
+local val = workspace["Personal Stats"]:FindFirstChild("IsInCD")
+local timerframe = script.Parent.Parent.Parent:FindFirstChild("CD Tracker")
+local fade = timerframe:FindFirstChild("Fade")
+local timer = fade:FindFirstChild("TextLabel")
+local CDval = workspace["Personal Stats"]:FindFirstChild("CD1")
+
+button.MouseButton1Click:Connect(function()
+	local bal = workspace["Personal Stats"]:FindFirstChild("Balance")
+	if bal.Value >= 500 and val.Value ~= true then
+		timer.Text = "120s"
+		bal.Value = bal.Value - 500
+		val.Value = true
+		CDval.Value = true
+	end
+end)
