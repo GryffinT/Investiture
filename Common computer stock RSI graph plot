@@ -1,0 +1,113 @@
+local frameParent = script.Parent
+local stockNameValue = frameParent.Parent:FindFirstChild("StockName")
+
+if not stockNameValue or not stockNameValue:IsA("StringValue") then
+	return
+end
+
+local stockName = stockNameValue.Value
+local stocksFolder = game.Workspace:FindFirstChild("Stocks")
+if not stocksFolder then
+	return
+end
+
+local stockFolder = stocksFolder:FindFirstChild(stockName)
+if not stockFolder then
+	return
+end
+
+local priceValue = stockFolder:FindFirstChild("Price")
+local trendValue = stockFolder:FindFirstChild("Trend")
+if not priceValue or not priceValue:IsA("NumberValue") then
+	return
+end
+if not trendValue or not trendValue:IsA("NumberValue") then
+	return
+end
+
+local waitTime = 5
+local timeElapsed = 0
+while trendValue.Value == 0 and timeElapsed < waitTime do
+	wait(1)
+	timeElapsed = timeElapsed + 1
+end
+
+if trendValue.Value == 0 then
+	trendValue.Value = 0
+end
+
+local frameHeight = frameParent.Size.Y.Offset
+local frameWidth = frameParent.Size.X.Offset
+local candleWidth = 5
+local frameMadeCount = 0
+local previousTrend = trendValue.Value
+
+local function resetGraph()
+	for _, child in pairs(frameParent:GetChildren()) do
+		if child:IsA("Frame") and child.Name == "Candle" then
+			child:Destroy()
+		end
+	end
+	frameMadeCount = 0
+end
+
+local function calculateYPosition(trend)
+	local clampedTrend = math.clamp(trend, -5, 5)
+	local normalized = (clampedTrend + 5) / 10
+	return normalized
+end
+
+local trendLine = Instance.new("Frame")
+trendLine.Name = "TrendLine"
+trendLine.Size = UDim2.new(0, 2, 0, 2)
+trendLine.BackgroundColor3 = Color3.fromRGB(169, 169, 169)
+trendLine.Position = UDim2.new(0, 0, 0, 0)
+trendLine.Parent = frameParent
+
+local trendLabel = Instance.new("TextLabel")
+trendLabel.Name = "TrendLabel"
+trendLabel.Size = UDim2.new(0, 100, 0, 30)
+trendLabel.Position = UDim2.new(1, -100, 0, -25)
+trendLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+trendLabel.BackgroundTransparency = 1
+trendLabel.TextScaled = true
+trendLabel.Font = Enum.Font.Roboto
+trendLabel.TextXAlignment = Enum.TextXAlignment.Right
+trendLabel.Parent = trendLine
+
+local function createCandleFrame(trend)
+	if frameMadeCount * (candleWidth + 1) >= frameWidth - candleWidth then
+		resetGraph()
+	end
+
+	local newFrame = Instance.new("Frame")
+	newFrame.Name = "Candle"
+	newFrame.Size = UDim2.new(0, candleWidth, 0, 10)
+	newFrame.Parent = frameParent
+
+	local trendPosition = calculateYPosition(trend)
+	newFrame.Position = UDim2.new(0, frameMadeCount * (candleWidth + 1), 0, frameHeight * trendPosition)
+
+	if trend > previousTrend then
+		newFrame.BackgroundColor3 = Color3.fromRGB(4, 182, 84)
+	elseif trend < previousTrend then
+		newFrame.BackgroundColor3 = Color3.fromRGB(182, 6, 6)
+	else
+		newFrame.BackgroundColor3 = Color3.fromRGB(128, 128, 128)
+	end
+
+	trendLine.Position = UDim2.new(0, frameMadeCount * (candleWidth + 1), 0, frameHeight * trendPosition)
+	trendLine.Size = UDim2.new(0, frameWidth - frameMadeCount * (candleWidth + 1), 0, 2)
+	trendLabel.Position = UDim2.new(1, -100, 0, -25)
+	trendLabel.Text = string.format("%.1f", trend)
+
+	frameMadeCount = frameMadeCount + 1
+	previousTrend = trend
+end
+
+createCandleFrame(previousTrend)
+
+trendValue.Changed:Connect(function()
+	local newTrend = trendValue.Value
+	createCandleFrame(newTrend)
+end)
