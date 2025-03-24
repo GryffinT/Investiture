@@ -1,0 +1,32 @@
+local printScreen = script.Parent
+local surfaceGui = printScreen:WaitForChild("SurfaceGui")
+
+local mainFrame = surfaceGui:WaitForChild("Mainframe")
+local background = surfaceGui:WaitForChild("Background")
+local frame1 = surfaceGui:WaitForChild("Frame1")
+local imageButton = mainFrame:WaitForChild("App1")
+
+print("PRINT_SCREEN found:", printScreen.Name)
+print("SurfaceGui found:", surfaceGui.Name)
+print("Mainframe found:", mainFrame.Name)
+print("Background found:", background.Name)
+print("Frame1 found:", frame1.Name)
+print("ImageButton found:", imageButton.Name)
+
+-- Toggle visibility when the button is clicked
+imageButton.MouseButton1Click:Connect(function()
+	print("ImageButton clicked!") -- Debugging
+
+	-- Toggle Frame1's visibility
+	frame1.Visible = not frame1.Visible
+	print("Frame1 visibility toggled to:", frame1.Visible)
+
+	-- Handle Background visibility based on Frame1
+	if frame1.Visible then
+		background.Visible = false
+		print("Background visibility set to false")
+	else
+		background.Visible = true
+		print("Background visibility set to true")
+	end
+end)
