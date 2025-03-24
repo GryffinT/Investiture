@@ -1,0 +1,40 @@
+local text = script.Parent
+local BuyFrame = text.Parent.Parent.Parent:FindFirstChild("BuyFrame")
+local Event = game.ReplicatedStorage:WaitForChild("TextInputEvent")
+local stock = BuyFrame.Parent.Parent:FindFirstChild("StockName").Value
+local Quantity = BuyFrame:FindFirstChild("Quantity")
+local ui = script.Parent.Parent
+local Transact = ui.Parent.Parent -- Assuming this is the "Transact" frame
+
+-- Function to update the conversion display
+local function updateConversion()
+	if not Transact or not Transact.Visible then return end -- Check if Transact is visible
+
+	local Stockused = workspace.Stocks:FindFirstChild(stock)
+	if not Stockused then return end
+
+	local price = Stockused:FindFirstChild("Price").Value
+	local MoneySPend = BuyFrame:FindFirstChild("Money").Value
+
+	-- Calculate total money spent
+	local totalSpent = MoneySPend / price
+	print("Total Spent:", totalSpent)
+
+	-- Format to 4 decimal places
+	local formattedValue = string.format("%.4f", totalSpent)
+
+	-- Update the TextLabel with the formatted value
+	text.Text = formattedValue .. " Shares"
+
+	if ui.Visible == true then
+		Quantity.Value = totalSpent
+	end
+end
+
+-- Listen for event triggers from the client
+Event.OnServerEvent:Connect(function()
+	if Transact and Transact.Visible then -- Ensure Transact is visible before running
+		task.wait(0.1) -- Small delay to ensure UI updates
+		updateConversion()
+	end
+end)
