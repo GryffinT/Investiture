@@ -1,0 +1,55 @@
+local val = script.Parent
+local trend = script.Parent.Parent:FindFirstChild("Trend")
+local maxChange = 50 
+
+-- Set an initial value for val
+val.Value = math.random(10, 1000)
+
+local function getWeightedRandom()
+	local rand = math.random(1, 100)
+
+	if rand <= 25 then
+		return math.random(10, 200)
+	elseif rand <= 40 then
+		return math.random(200, 400)
+	elseif rand <= 55 then
+		return math.random(400, 600)
+	elseif rand <= 70 then
+		return math.random(600, 800)
+	elseif rand <= 85 then
+		return math.random(800, 1000)
+	else
+		return math.random(1000, 1500)
+	end
+end
+
+-- Function to adjust the volume based on the trend
+local function adjustVolumeBasedOnTrend()
+	-- Check the direction of the trend
+	local trendValue = trend and trend.Value or 0
+	local directionMultiplier = trendValue > 0 and 1 or -1
+
+	-- Decide how much to adjust based on the trend value
+	if trendValue > 0 then
+		adjustmentFactor = trendValue + 1
+	else
+		adjustmentFactor = trendValue
+	end
+	adjustmentFactor = math.min(adjustmentFactor, 1) -- Limit the adjustment to not go over the trend range
+
+	-- Calculate the potential volume change
+	local volumeChange = val.Value * math.abs(adjustmentFactor) * directionMultiplier
+
+	-- Ensure that the volume change does not exceed ±50
+	volumeChange = math.clamp(volumeChange, -maxChange, maxChange)
+
+	-- Apply the volume change
+	val.Value = val.Value + volumeChange
+end
+
+while true do
+	-- Adjust volume based on trend
+	adjustVolumeBasedOnTrend()
+
+	wait(math.random(10, 60))
+end
