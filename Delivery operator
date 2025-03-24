@@ -1,0 +1,93 @@
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local billDeliveryEvent = ReplicatedStorage:WaitForChild("BillDelivery")
+
+
+
+local targetPosition = Vector3.new(7.611, 0.108, -13.84)
+local clonedRents = {}  
+
+local minX, maxX = math.random(-15, -12)
+local spawnPosition = Vector3.new(8.715, 0.594, 0)
+
+local tweenInfo = TweenInfo.new(
+	0.5,  
+	Enum.EasingStyle.Linear,  
+	Enum.EasingDirection.Out  
+)
+
+-- Function to check if a Z position is already occupied
+local function isZPositionOccupied(positionZ)
+	for _, rent in pairs(Workspace:GetChildren()) do
+		if rent:IsA("UnionOperation") and rent.Name == "Rent" and math.abs(rent.Position.Z - positionZ) < 0.01 then
+			return true
+		end
+	end
+	return false
+end
+
+-- Function to clone and tween the Rent union
+local function triggerTween()
+	local third = math.random(-15, -12)
+	local first = math.random(6,7)
+	local targetPosition = Vector3.new(first, .108, third)
+	local rentTemplate = Lighting:FindFirstChild("Rent")
+	if rentTemplate then
+		local positionZ
+
+		-- Ensure a unique Z position
+		repeat
+			positionZ = math.random(-15.507, -12.136)
+		until not isZPositionOccupied(positionZ)
+
+		local finalPosition = Vector3.new(spawnPosition.X, spawnPosition.Y, positionZ)
+
+		-- Clone the Rent union and parent it to Workspace
+		local clonedRent = rentTemplate:Clone()
+		clonedRent.Position = finalPosition
+		clonedRent.Orientation = Vector3.new(0, math.random(0, 360), 0)
+		clonedRent.Parent = Workspace
+
+		-- Check if this Rent has already been handled
+		if clonedRents[clonedRent] then return end
+		clonedRents[clonedRent] = true
+
+		-- Create the Tween
+		local tweenGoal = {Position = targetPosition}
+		local tween = TweenService:Create(clonedRent, tweenInfo, tweenGoal)
+		tween:Play()
+
+		-- Play sound effect if available
+		local sfx = clonedRent:FindFirstChild("Rent")
+		if sfx and sfx:IsA("Sound") then
+			sfx:Play()
+		else
+			warn("Sound 'Rent' not found in cloned Rent!")
+		end
+	end
+end
+
+
+billDeliveryEvent.OnServerEvent:Connect(function()
+	local currentTime = Lighting.ClockTime
+	if not (currentTime >= 19.5 and currentTime <= 20.5) then
+		triggerTween() 
+	end
+end)
+
+local hasTweened = false
+
+game:GetService("RunService").Heartbeat:Connect(function()
+	local currentTime = Lighting.ClockTime
+
+	if currentTime >= 19.5 and currentTime <= 20.5 then
+		if not hasTweened then
+			triggerTween()
+			hasTweened = true
+		end
+	else
+		hasTweened = false 
+	end
+end)
