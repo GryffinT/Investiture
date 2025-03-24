@@ -1,0 +1,27 @@
+local app = workspace.PRINT_SCREEN:FindFirstChild("SurfaceGui")
+local open = app.Mainframe:FindFirstChild("App2")
+local event = game.ReplicatedStorage:WaitForChild("Level2")
+local Players = game:GetService("Players")
+
+while true do
+	wait(10)
+	local val = script.Parent.Value
+	if val >= 2000 then
+		-- Make the UI visible and interactive
+		open.Visible = true
+		open.Interactable = true
+
+		-- Find the only player in the server
+		local player = Players:GetPlayers()[1]
+		if player then
+			local playerCamera = player.CameraMaxZoomDistance
+			player.CameraMaxZoomDistance = playerCamera + 0.5 -- Increase max zoom distance
+		end
+
+		-- Fire the event to all clients
+		event:FireAllClients()
+
+		-- Destroy the script
+		script:Destroy()
+	end
+end
