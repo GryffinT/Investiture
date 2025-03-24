@@ -1,0 +1,33 @@
+local text = script.Parent
+print("Script started. TextLabel:", text.Name)
+
+local stockContainer = script.Parent.Parent.Parent.Parent
+if not stockContainer then
+	warn("Stock container not found!")
+	return
+end
+
+local stockNameObject = stockContainer:FindFirstChild("StockName")
+if not stockNameObject then
+	warn("StockName object not found!")
+	return
+end
+
+local stock = stockNameObject.Value
+print("Stock Name:", stock)
+
+local stockfolder = workspace.Stocks:FindFirstChild(stock)
+if not stockfolder then
+	warn("Stock folder not found in workspace for:", stock)
+	return
+end
+print("Found stock folder:", stockfolder.Name)
+
+local val = stockfolder:FindFirstChild(text.Name)
+if not val then
+	warn("Value object not found in stock folder for:", text.Name)
+	return
+end
+print("Found value object:", val.Name, "with value:", val.Value)
+
+text.Text = val.Value
