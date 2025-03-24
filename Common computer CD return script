@@ -1,0 +1,36 @@
+local button = script.Parent
+
+button.MouseButton1Click:Connect(function()
+	local bal = workspace["Personal Stats"]:FindFirstChild("Balance")
+	local val = workspace["Personal Stats"]:FindFirstChild("IsInCD")
+	local CD1 = workspace["Personal Stats"]:FindFirstChild("CD1")
+	local CD2 = workspace["Personal Stats"]:FindFirstChild("CD2")
+	local CD3 = workspace["Personal Stats"]:FindFirstChild("CD3")
+
+	if not (bal and val and CD1 and CD2 and CD3) then
+		warn("One or more required values are missing!")
+		return
+	end
+
+	script.Parent.Parent:FindFirstChild("Fade").Visible = true
+	script.Parent.Parent.Fade:FindFirstChild("TextLabel").Text = "SELECT CD"
+	button.Interactable = false
+
+	if CD1.Value then
+		bal.Value = bal.Value + 500 + (500 * 0.10)
+		print("Returning CD1")
+	elseif CD2.Value then
+		bal.Value = bal.Value + 500 + (500 * 0.25)
+		print("Returning CD2")
+	elseif CD3.Value then
+		bal.Value = bal.Value + 500 + (500 * 0.50)
+		print("Returning CD3")
+	else
+		print("No CD selected!")
+	end
+
+	val.Value = false
+	CD1.Value = false
+	CD2.Value = false
+	CD3.Value = false
+end)
