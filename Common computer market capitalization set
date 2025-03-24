@@ -1,0 +1,71 @@
+-- Function to update the display text
+local function updateDisplayText()
+	local vol = script.Parent.Parent.Parent.Parent:FindFirstChild("StockName")
+	if not vol then
+		warn("StockName not found!")
+		return
+	end
+
+	local volumeval = vol.Value
+	local volumeget = workspace.Stocks:FindFirstChild(volumeval)
+	if not volumeget then
+		warn("Stock not found in workspace!")
+		return
+	end
+
+	local volume = volumeget:FindFirstChild("Volume")
+	if not volume then
+		warn("Volume not found for stock!")
+		return
+	end
+
+	local price = volumeget:FindFirstChild("Price")
+	if not price then
+		warn("Price not found for stock!")
+		return
+	end
+
+	local totalValue = volume.Value * 1000000 * price.Value
+	local displayValue
+
+	if totalValue >= 1000000000000 then
+		displayValue = string.format("$%.2fT", totalValue / 1000000000000)  -- Trillion (T)
+	elseif totalValue >= 1000000000 then
+		displayValue = string.format("$%.2fB", totalValue / 1000000000)  -- Billion (B)
+	elseif totalValue >= 1000000 then
+		displayValue = string.format("$%.2fM", totalValue / 1000000)  -- Million (M)
+	else
+		displayValue = string.format("$%.2f", totalValue)  -- Regular format
+	end
+
+	script.Parent.Text = displayValue
+end
+
+-- Wait for initial setup
+wait(5)
+
+-- Update the display when the volume or price changes
+local vol = script.Parent.Parent.Parent.Parent:FindFirstChild("StockName")
+if vol then
+	local volumeval = vol.Value
+	local volumeget = workspace.Stocks:FindFirstChild(volumeval)
+	if volumeget then
+		local volume = volumeget:FindFirstChild("Volume")
+		local price = volumeget:FindFirstChild("Price")
+
+		-- Connect the update function to the 'Changed' events
+		if volume then
+			volume.Changed:Connect(updateDisplayText)
+		end
+		if price then
+			price.Changed:Connect(updateDisplayText)
+		end
+
+		-- Initial update of the display text
+		updateDisplayText()
+	else
+		warn("Stock not found in workspace!")
+	end
+else
+	warn("StockName not found!")
+end
