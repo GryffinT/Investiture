@@ -1,0 +1,7 @@
+local price = script.Parent.Parent:WaitForChild("Price")
+local intValue = script.Parent
+local priceValue = price.Value
+local randomPercentage = math.random(25, 70) / 100 -- Between 2.5% and 7%
+
+local addedValue = priceValue * randomPercentage
+intValue.Value = priceValue + addedValue
