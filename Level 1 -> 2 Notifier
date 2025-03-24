@@ -1,0 +1,36 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui"):WaitForChild("Notis") 
+local event = ReplicatedStorage:WaitForChild("Level2")
+
+local function fadeUI(element)
+	if element then
+		local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) -- Fade in
+		local fadeIn = TweenService:Create(element, tweenInfo, {BackgroundTransparency = 0, TextTransparency = 0})
+
+		local fadeOutTweenInfo = TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out) -- Fade out
+		local fadeOut = TweenService:Create(element, fadeOutTweenInfo, {BackgroundTransparency = 1, TextTransparency = 1})
+
+		fadeIn:Play()
+		fadeIn.Completed:Wait()
+		task.wait(1) 
+		fadeOut:Play()
+		fadeOut.Completed:Wait()
+	end
+end
+
+local function onLevel2Triggered()
+	local n1 = gui:FindFirstChild("N1")
+	local n2 = gui:FindFirstChild("N2")
+
+	fadeUI(n1)
+	fadeUI(n2)
+
+	-- Add other tasks to run after UI fades
+	print("LEVEL2 event completed, now doing other stuff...")
+end
+
+event.OnClientEvent:Connect(onLevel2Triggered)
