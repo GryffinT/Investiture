@@ -1,0 +1,44 @@
+
+local folder = script.Parent
+
+-- Function to round to the nearest hundredth
+local function roundToHundredth(num)
+	return math.floor(num * 1000 + 0.5) / 1000
+end
+
+-- Function to process all NumberValues in the folder
+local function processValues()
+	for _, value in pairs(folder:GetChildren()) do
+		if value:IsA("NumberValue") then
+			value.Value = roundToHundredth(value.Value)
+		end
+	end
+end
+
+-- Initial rounding
+processValues()
+
+-- Listen for new values being added
+folder.ChildAdded:Connect(function(child)
+	if child:IsA("NumberValue") then
+		child.Value = roundToHundredth(child.Value)
+	end
+end)
+
+-- Listen for value changes and round them
+for _, value in pairs(folder:GetChildren()) do
+	if value:IsA("NumberValue") then
+		value.Changed:Connect(function()
+			value.Value = roundToHundredth(value.Value)
+		end)
+	end
+end
+
+-- Listen for new values and set up change listener
+folder.ChildAdded:Connect(function(child)
+	if child:IsA("NumberValue") then
+		child.Changed:Connect(function()
+			child.Value = roundToHundredth(child.Value)
+		end)
+	end
+end)
