@@ -1,0 +1,11 @@
+local event = game.ReplicatedStorage:FindFirstChild("Game Over")
+
+event.OnClientEvent:Connect(function(message)
+	local player = game.Players.LocalPlayer
+	local gameOverScreen = player:WaitForChild("PlayerGui"):WaitForChild("Game Over Screen")
+	local frame = gameOverScreen:WaitForChild("Frame")
+	local reasonsText = frame:WaitForChild("Reason")
+	gameOverScreen.Enabled = true
+
+	reasonsText.Text = message
+end)
