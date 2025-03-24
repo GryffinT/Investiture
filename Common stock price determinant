@@ -1,0 +1,9 @@
+local intValue = script.Parent
+local high = script.Parent.Parent:FindFirstChild("DayHigh"):FindFirstChild("DayHigh")
+local low = script.Parent.Parent:FindFirstChild("DayLow"):FindFirstChild("DayLow")
+local flux = script.Parent:FindFirstChild("PriceFluctuationOperator")
+
+intValue.Value = math.random(100, 2000)
+high.Enabled = true
+low.Enabled = true
+flux.Enabled = true
